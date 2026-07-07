@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.animation.DecelerateInterpolator
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -19,7 +20,6 @@ import io.legado.app.data.entities.Book
 import io.legado.app.ui.ai.AIDialog
 import io.legado.app.databinding.ActivityImmersiveReadBinding
 import io.legado.app.ui.book.read.ReadBookViewModel
-import io.legado.app.ui.book.read.immersive.ImmersiveChapter
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,8 +46,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // setContentView handled by binding
-        book = intent.getParcelableExtra(EXTRA_BOOK)!! as Book
+        book = intent.getParcelableExtra(EXTRA_BOOK) as Book
         initView()
     }
 
@@ -87,14 +86,31 @@ class ImmersiveReadActivity : AppCompatActivity() {
         })
 
         binding.btnAi.setOnClickListener { showAIDialog() }
-        binding.btnChapterList.setOnClickListener { toggleNightMode() }
         binding.btnNightMode.setOnClickListener { toggleNightMode() }
         binding.btnSettings.setOnClickListener { showSettings() }
 
         loadContent()
     }
 
-    private fun loadContent() {        lifecycleScope.launch {            val chapters = withContext(Dispatchers.IO) {                val db = io.legado.app.data.appDb                val bookChapters = db.bookChapterDao.getChapterList(book.bookUrl)                bookChapters.mapNotNull { bc ->                    val content = io.legado.app.help.book.BookHelp.getContent(book, bc)                    if (content != null) {                        ImmersiveChapter(bc.title, content)                    } else {                        ImmersiveChapter(bc.title, "(閸愬懎顔愰崝鐘烘祰娑擃叏绱濈拠宄板帥缂傛挸鐡ㄧ粩鐘哄Ν...)")                    }                }            }            if (chapters.isNotEmpty()) {                setupViewPager(chapters)            }        }    }
+    private fun loadContent() {
+        lifecycleScope.launch {
+            val chapters = withContext(Dispatchers.IO) {
+                val db = io.legado.app.data.appDb
+                val bookChapters = db.bookChapterDao.getChapterList(book.bookUrl)
+                bookChapters.mapNotNull { bc ->
+                    val content = io.legado.app.help.book.BookHelp.getContent(book, bc)
+                    ImmersiveChapter(
+                        bc.title,
+                        content ?: "(content loading, please cache chapter first)"
+                    )
+                }
+            }
+            if (chapters.isNotEmpty()) {
+                setupViewPager(chapters)
+            }
+        }
+    }
+
     private fun setupViewPager(chapters: List<ImmersiveChapter>) {
         val adapter = ImmersiveReadAdapter(this, chapters, fontSize, lineSpacing, isNightMode)
         binding.viewPager.adapter = adapter
@@ -104,10 +120,8 @@ class ImmersiveReadActivity : AppCompatActivity() {
 
     private fun toggleControls() {
         isControlsVisible = !isControlsVisible
-        ValueAnimator.ofFloat(
-            if (isControlsVisible) 0f else 1f,
-            if (isControlsVisible) 1f else 0f
-        ).apply {
+        val alphaTarget = if (isControlsVisible) 1f else 0f
+        ValueAnimator.ofFloat(1f - alphaTarget, alphaTarget).apply {
             duration = 300
             interpolator = DecelerateInterpolator()
             addUpdateListener { anim ->
@@ -132,9 +146,12 @@ class ImmersiveReadActivity : AppCompatActivity() {
     private fun toggleNightMode() {
         isNightMode = !isNightMode
         binding.rootLayout.setBackgroundColor(
-            resources.getColor(if (isNightMode) R.color.read_bg_night else R.color.read_bg, theme)
+            resources.getColor(
+                if (isNightMode) R.color.read_bg_night else R.color.read_bg,
+                theme
+            )
         )
-        binding.btnNightMode.text = if (isNightMode) "閺冦儵妫? else "婢舵粓妫?
+        binding.btnNightMode.text = if (isNightMode) "Day" else "Night"
         (binding.viewPager.adapter as? ImmersiveReadAdapter)?.updateNightMode(isNightMode)
     }
 
@@ -163,7 +180,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
                 if (key.isNotBlank()) {
                     DeepSeekClient.updateConfig(DeepSeekClient.getCurrentConfig().copy(apiKey = key))
                 }
-                android.widget.Toast.makeText(this, "API Key 瀹歌弓绻氱€?, android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "API Key saved", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
@@ -174,6 +191,3 @@ class ImmersiveReadActivity : AppCompatActivity() {
         onBackPressedDispatcher.onBackPressed(); return true
     }
 }
-
-
-
