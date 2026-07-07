@@ -1,4 +1,4 @@
-﻿package io.legado.app.ui.book.read.immersive
+package io.legado.app.ui.book.read.immersive
 
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint

@@ -1,4 +1,4 @@
-﻿package io.legado.app.ui.book.read.immersive
+package io.legado.app.ui.book.read.immersive
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity

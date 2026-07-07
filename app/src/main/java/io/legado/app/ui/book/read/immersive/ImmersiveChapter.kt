@@ -1,4 +1,4 @@
-﻿package io.legado.app.ui.book.read.immersive
+package io.legado.app.ui.book.read.immersive
 
 data class ImmersiveChapter(
     val title: String,

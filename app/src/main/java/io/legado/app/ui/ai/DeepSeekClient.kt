@@ -1,4 +1,4 @@
-﻿package io.legado.app.ui.ai
+package io.legado.app.ui.ai
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

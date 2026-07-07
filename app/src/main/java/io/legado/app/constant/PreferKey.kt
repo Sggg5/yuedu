@@ -1,4 +1,4 @@
-﻿package io.legado.app.constant
+package io.legado.app.constant
 
 @Suppress("ConstPropertyName")
 object PreferKey {

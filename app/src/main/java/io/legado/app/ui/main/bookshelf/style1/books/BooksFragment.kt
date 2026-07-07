@@ -1,4 +1,4 @@
-﻿package io.legado.app.ui.main.bookshelf.style1.books
+package io.legado.app.ui.main.bookshelf.style1.books
 
 import android.annotation.SuppressLint
 import android.graphics.Rect

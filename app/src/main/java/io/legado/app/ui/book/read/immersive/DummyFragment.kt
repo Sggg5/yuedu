@@ -1,4 +1,4 @@
-﻿package io.legado.app.ui.book.read.immersive
+package io.legado.app.ui.book.read.immersive
 
 import android.os.Bundle
 import android.view.LayoutInflater
