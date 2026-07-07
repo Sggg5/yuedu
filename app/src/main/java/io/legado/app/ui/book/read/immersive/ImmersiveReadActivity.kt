@@ -1,32 +1,39 @@
-package io.legado.app.ui.book.read.immersive
+﻿package io.legado.app.ui.book.read.immersive
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.animation.DecelerateInterpolator
 import android.widget.SeekBar
-import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import io.legado.app.R
 import io.legado.app.constant.PreferKey
-import io.legado.app.data.appDb
-import io.legado.app.data.entities.Book
-import io.legado.app.help.book.BookHelp
-import io.legado.app.ui.ai.AIDialog
 import io.legado.app.ui.ai.DeepSeekClient
+import io.legado.app.data.entities.Book
+import io.legado.app.ui.ai.AIDialog
+import io.legado.app.databinding.ActivityImmersiveReadBinding
+import io.legado.app.ui.book.read.ReadBookViewModel
+import io.legado.app.ui.book.read.immersive.ImmersiveChapter
+import io.legado.app.utils.viewbindingdelegate.viewBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@SuppressLint("SetTextI18n")
+@SuppressLint("ClickableViewAccessibility")
 class ImmersiveReadActivity : AppCompatActivity() {
+    private val binding by viewBinding(ActivityImmersiveReadBinding::bind)
+    private val viewModel by viewModels<ReadBookViewModel>()
     private lateinit var book: Book
     private var fontSize = 18f
     private var lineSpacing = 8f
     private var isNightMode = false
+    private var isControlsVisible = true
 
     companion object {
         const val EXTRA_BOOK = "book"
@@ -40,107 +47,100 @@ class ImmersiveReadActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_immersive_read)
-        book = intent.getSerializableExtra(EXTRA_BOOK) as Book
-        setupToolbar()
-        setupFontControls()
-        setupBottomButtons()
-        loadChapters()
+        book = intent.getParcelableExtra(EXTRA_BOOK)!! as Book
+        initView()
     }
 
-    private fun setupToolbar() {
-        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
+    private fun initView() {
+        setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = book.name
-        toolbar.setOnClickListener { toggleControls() }
-    }
 
-    private fun setupFontControls() {
-        val fontSizeSeekbar = findViewById<SeekBar>(R.id.font_size_seekbar)
-        val lineSpacingSeekbar = findViewById<SeekBar>(R.id.line_spacing_seekbar)
-
-        fontSizeSeekbar.progress = (fontSize - 12f).toInt()
-        fontSizeSeekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(s: SeekBar, v: Int, f: Boolean) {
-                fontSize = 12f + v
-                updateTextAppearance()
-            }
-            override fun onStartTrackingTouch(s: SeekBar) {}
-            override fun onStopTrackingTouch(s: SeekBar) {}
+        binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {}
         })
 
-        lineSpacingSeekbar.progress = (lineSpacing - 2f).toInt()
-        lineSpacingSeekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(s: SeekBar, v: Int, f: Boolean) {
-                lineSpacing = 2f + v
-                updateTextAppearance()
+        binding.rootLayout.setOnClickListener { toggleControls() }
+
+        binding.fontSizeSeekbar.progress = (fontSize - 12f).toInt()
+        binding.fontSizeSeekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seek: SeekBar, value: Int, fromUser: Boolean) {
+                fontSize = 12f + value; updatePageTextSize()
             }
-            override fun onStartTrackingTouch(s: SeekBar) {}
-            override fun onStopTrackingTouch(s: SeekBar) {}
+            override fun onStartTrackingTouch(seek: SeekBar) {}
+            override fun onStopTrackingTouch(seek: SeekBar) {}
+        })
+        binding.btnFontDecrease.setOnClickListener {
+            if (fontSize > 12f) { fontSize -= 1f; binding.fontSizeSeekbar.progress = (fontSize - 12f).toInt(); updatePageTextSize() }
+        }
+        binding.btnFontIncrease.setOnClickListener {
+            if (fontSize < 42f) { fontSize += 1f; binding.fontSizeSeekbar.progress = (fontSize - 12f).toInt(); updatePageTextSize() }
+        }
+
+        binding.lineSpacingSeekbar.progress = (lineSpacing - 2f).toInt()
+        binding.lineSpacingSeekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seek: SeekBar, value: Int, fromUser: Boolean) {
+                lineSpacing = 2f + value; updatePageLineSpacing()
+            }
+            override fun onStartTrackingTouch(seek: SeekBar) {}
+            override fun onStopTrackingTouch(seek: SeekBar) {}
         })
 
-        findViewById<TextView>(R.id.btn_font_decrease).setOnClickListener {
-            if (fontSize > 12f) { fontSize -= 1f; fontSizeSeekbar.progress = (fontSize - 12f).toInt(); updateTextAppearance() }
-        }
-        findViewById<TextView>(R.id.btn_font_increase).setOnClickListener {
-            if (fontSize < 42f) { fontSize += 1f; fontSizeSeekbar.progress = (fontSize - 12f).toInt(); updateTextAppearance() }
-        }
+        binding.btnAi.setOnClickListener { showAIDialog() }
+        binding.btnChapterList.setOnClickListener { toggleNightMode() }
+        binding.btnNightMode.setOnClickListener { toggleNightMode() }
+        binding.btnSettings.setOnClickListener { showSettings() }
+
+        loadContent()
     }
 
-    private fun setupBottomButtons() {
-        findViewById<TextView>(R.id.btn_ai).setOnClickListener { showAIDialog() }
-        findViewById<TextView>(R.id.btn_night_mode).setOnClickListener { toggleNightMode() }
-        findViewById<TextView>(R.id.btn_settings).setOnClickListener { showSettings() }
-    }
-
-    private fun loadChapters() {
-        lifecycleScope.launch {
-            val chapters = withContext(Dispatchers.IO) {
-                val bookChapters = appDb.bookChapterDao.getChapterList(book.bookUrl)
-                bookChapters.mapNotNull { bc ->
-                    val content = BookHelp.getContent(book, bc)
-                    if (content != null) ImmersiveChapter(bc.title, content)
-                    else ImmersiveChapter(bc.title, "(loading...)")
-                }
-            }
-            if (chapters.isNotEmpty()) {
-                val viewPager = findViewById<ViewPager2>(R.id.view_pager)
-                viewPager.adapter = ImmersiveReadAdapter(this@ImmersiveReadActivity, chapters, fontSize, lineSpacing, isNightMode)
-                viewPager.offscreenPageLimit = 1
-                viewPager.currentItem = book.durChapterIndex.coerceAtMost(chapters.size - 1)
-            }
-        }
-    }
-
-    private fun updateTextAppearance() {
-        val vp = findViewById<ViewPager2>(R.id.view_pager)
-        (vp.adapter as? ImmersiveReadAdapter)?.let { a ->
-            a.updateFontSize(fontSize)
-            a.updateLineSpacing(lineSpacing)
-        }
+    private fun loadContent() {        lifecycleScope.launch {            val chapters = withContext(Dispatchers.IO) {                val db = io.legado.app.data.appDb                val bookChapters = db.bookChapterDao.getChapterList(book.bookUrl)                bookChapters.mapNotNull { bc ->                    val content = io.legado.app.help.book.BookHelp.getContent(book, bc)                    if (content != null) {                        ImmersiveChapter(bc.title, content)                    } else {                        ImmersiveChapter(bc.title, "(鍐呭鍔犺浇涓紝璇峰厛缂撳瓨绔犺妭...)")                    }                }            }            if (chapters.isNotEmpty()) {                setupViewPager(chapters)            }        }    }
+    private fun setupViewPager(chapters: List<ImmersiveChapter>) {
+        val adapter = ImmersiveReadAdapter(this, chapters, fontSize, lineSpacing, isNightMode)
+        binding.viewPager.adapter = adapter
+        binding.viewPager.offscreenPageLimit = 1
+        binding.viewPager.currentItem = book.durChapterIndex.coerceAtMost(chapters.size - 1)
     }
 
     private fun toggleControls() {
-        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
-        val bottom = findViewById<android.view.View>(R.id.bottom_panel)
-        val showing = toolbar.visibility == android.view.View.VISIBLE
-        toolbar.visibility = if (showing) android.view.View.GONE else android.view.View.VISIBLE
-        bottom.visibility = if (showing) android.view.View.GONE else android.view.View.VISIBLE
+        isControlsVisible = !isControlsVisible
+        ValueAnimator.ofFloat(
+            if (isControlsVisible) 0f else 1f,
+            if (isControlsVisible) 1f else 0f
+        ).apply {
+            duration = 300
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { anim ->
+                val alpha = anim.animatedValue as Float
+                binding.toolbar.alpha = alpha
+                binding.toolbar.isVisible = isControlsVisible
+                binding.bottomPanel.alpha = alpha
+                binding.bottomPanel.isVisible = isControlsVisible
+            }
+            start()
+        }
+    }
+
+    private fun updatePageTextSize() {
+        (binding.viewPager.adapter as? ImmersiveReadAdapter)?.updateFontSize(fontSize)
+    }
+
+    private fun updatePageLineSpacing() {
+        (binding.viewPager.adapter as? ImmersiveReadAdapter)?.updateLineSpacing(lineSpacing)
     }
 
     private fun toggleNightMode() {
         isNightMode = !isNightMode
-        findViewById<android.widget.LinearLayout>(R.id.root_layout).setBackgroundColor(
+        binding.rootLayout.setBackgroundColor(
             resources.getColor(if (isNightMode) R.color.read_bg_night else R.color.read_bg, theme)
         )
-        findViewById<TextView>(R.id.btn_night_mode).text = if (isNightMode) "\u65e5\u95f4" else "\u591c\u95f4"
-        val vp = findViewById<ViewPager2>(R.id.view_pager)
-        (vp.adapter as? ImmersiveReadAdapter)?.updateNightMode(isNightMode)
+        binding.btnNightMode.text = if (isNightMode) "鏃ラ棿" else "澶滈棿"
+        (binding.viewPager.adapter as? ImmersiveReadAdapter)?.updateNightMode(isNightMode)
     }
 
     private fun showAIDialog() {
-        val vp = findViewById<ViewPager2>(R.id.view_pager)
-        val text = (vp.adapter as? ImmersiveReadAdapter)?.getPageText(vp.currentItem) ?: ""
+        val text = (binding.viewPager.adapter as? ImmersiveReadAdapter)
+            ?.getPageText(binding.viewPager.currentItem) ?: ""
         AIDialog.showDialog(supportFragmentManager, text)
     }
 
@@ -151,22 +151,27 @@ class ImmersiveReadActivity : AppCompatActivity() {
             setText(apiKey)
             setHint(R.string.deepseek_api_key_hint)
         }
-        AlertDialog.Builder(this)
+        androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle(R.string.ai_feature)
             .setView(input)
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 val key = input.text.toString().trim()
                 getSharedPreferences("io.legado.app_preferences", MODE_PRIVATE)
-                    .edit().putString(PreferKey.deepseekApiKey, key).apply()
-                if (key.isNotBlank()) DeepSeekClient.updateConfig(DeepSeekClient.getCurrentConfig().copy(apiKey = key))
-                android.widget.Toast.makeText(this, "API Key saved", android.widget.Toast.LENGTH_SHORT).show()
+                    .edit()
+                    .putString(PreferKey.deepseekApiKey, key)
+                    .apply()
+                if (key.isNotBlank()) {
+                    DeepSeekClient.updateConfig(DeepSeekClient.getCurrentConfig().copy(apiKey = key))
+                }
+                android.widget.Toast.makeText(this, "API Key 宸蹭繚瀛?, android.widget.Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
+        toggleControls()
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        onBackPressedDispatcher.onBackPressed()
-        return true
+        onBackPressedDispatcher.onBackPressed(); return true
     }
 }
+

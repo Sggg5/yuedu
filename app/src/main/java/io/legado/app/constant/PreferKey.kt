@@ -1,4 +1,4 @@
-package io.legado.app.constant
+﻿package io.legado.app.constant
 
 @Suppress("ConstPropertyName")
 object PreferKey {
@@ -210,4 +210,7 @@ object PreferKey {
     const val editAutoComplete = "editAutoComplete"
     const val showBoardLine = "showBoardLine"
     const val deepseekApiKey = "deepseekApiKey"
+    const val deepseekTemperature = "deepseekTemperature"
 }
+
+

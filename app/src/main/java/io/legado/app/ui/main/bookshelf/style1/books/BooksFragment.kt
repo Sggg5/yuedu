@@ -1,4 +1,4 @@
-package io.legado.app.ui.main.bookshelf.style1.books
+﻿package io.legado.app.ui.main.bookshelf.style1.books
 
 import android.annotation.SuppressLint
 import android.graphics.Rect
@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 
 /**
- * 书架界面
+ * 涔︽灦鐣岄潰
  */
 class BooksFragment() : BaseFragment(R.layout.fragment_books),
     BaseBooksAdapter.CallBack {
@@ -73,7 +73,7 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
             1 -> {
                 BooksAdapterList2(requireContext(), this, this, viewLifecycleOwner.lifecycle)
             }
-            4 -> {
+            7 -> {
                 BooksAdapterWeChat(requireContext(), this)
             }
             else -> {
@@ -126,11 +126,11 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
         booksAdapter.stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
         binding.rvBookshelf.adapter = booksAdapter
         /**
-         * 应该是当初没有使用override val keepScrollPosition = true 加的代码
-         * 最近阅读插入顶部时会造成滚动
-         * 但是采用keepScrollPosition = true复原滚动后,代码就多余了
-         * 采用下面代码反而会向上多滚动一个行
-         * 再加上2025/12/19代码,因为下面的代码会出现很奇怪的自动滚动到顶部现象,没理出原因,注释掉下面代码
+         * 搴旇鏄綋鍒濇病鏈変娇鐢╫verride val keepScrollPosition = true 鍔犵殑浠ｇ爜
+         * 鏈€杩戦槄璇绘彃鍏ラ《閮ㄦ椂浼氶€犳垚婊氬姩
+         * 浣嗘槸閲囩敤keepScrollPosition = true澶嶅師婊氬姩鍚?浠ｇ爜灏卞浣欎簡
+         * 閲囩敤涓嬮潰浠ｇ爜鍙嶈€屼細鍚戜笂澶氭粴鍔ㄤ竴涓
+         * 鍐嶅姞涓?025/12/19浠ｇ爜,鍥犱负涓嬮潰鐨勪唬鐮佷細鍑虹幇寰堝鎬殑鑷姩婊氬姩鍒伴《閮ㄧ幇璞?娌＄悊鍑哄師鍥?娉ㄩ噴鎺変笅闈唬鐮?
          * **/
 //        booksAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
 //            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
@@ -161,10 +161,10 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
                     val spanCount = if (bookshelfLayout == 7) 2 else bookshelfLayout
                     val rowIndex = position / spanCount
                     when (rowIndex) {
-                        0 -> { //第一行加额外上边距
+                        0 -> { //绗竴琛屽姞棰濆涓婅竟璺?
                             outRect.set(bookshelfMargin, bookshelfMargin + 24, bookshelfMargin, bookshelfMargin)
                         }
-                        totalRows - 1 -> { //最后一行加额外下边距
+                        totalRows - 1 -> { //鏈€鍚庝竴琛屽姞棰濆涓嬭竟璺?
                             outRect.set(bookshelfMargin, bookshelfMargin, bookshelfMargin, bookshelfMargin + 24)
                         }
                         else -> {
@@ -214,13 +214,13 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
     }
 
     /**
-     * 更新书籍列表信息
+     * 鏇存柊涔︾睄鍒楄〃淇℃伅
      */
     private fun upRecyclerData() {
         booksFlowJob?.cancel()
         booksFlowJob = viewLifecycleOwner.lifecycleScope.launch {
             appDb.bookDao.flowByGroup(groupId).map { list ->
-                //排序
+                //鎺掑簭
                 when (bookSort) {
                     1 -> list.sortedByDescending { it.latestChapterTime }
                     2 -> list.sortedWith { o1, o2 ->
@@ -229,11 +229,11 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
 
                     3 -> list.sortedBy { it.order }
 
-                    // 综合排序 issue #3192
+                    // 缁煎悎鎺掑簭 issue #3192
                     4 -> list.sortedByDescending {
                         max(it.latestChapterTime, it.durChapterTime)
                     }
-                    // 按作者排序
+                    // 鎸変綔鑰呮帓搴?
                     5 -> list.sortedWith { o1, o2 ->
                         o1.author.cnCompare(o2.author)
                     }
@@ -245,7 +245,7 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
                 Lifecycle.State.RESUMED,
                 AppDatabase.BOOK_TABLE_NAME
             ).catch {
-                AppLog.put("书架更新出错", it)
+                AppLog.put("涔︽灦鏇存柊鍑洪敊", it)
             }.conflate().flowOn(Dispatchers.Default).collect { list ->
                 itemCount = list.size
                 val spanCount = if (bookshelfLayout == 7) 2 else bookshelfLayout
@@ -294,7 +294,7 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
     override fun onDestroyView() {
         super.onDestroyView()
         /**
-         * 将 RecyclerView 中的视图全部回收到 RecycledViewPool 中
+         * 灏?RecyclerView 涓殑瑙嗗浘鍏ㄩ儴鍥炴敹鍒?RecycledViewPool 涓?
          */
         binding.rvBookshelf.setItemViewCacheSize(0)
         binding.rvBookshelf.adapter = null
@@ -328,3 +328,4 @@ class BooksFragment() : BaseFragment(R.layout.fragment_books),
         }
     }
 }
+

@@ -29,7 +29,7 @@ class BooksAdapterWeChat(context: Context, private val callBack: CallBack) :
         if (payloads.isEmpty()) {
             wechatBinding.apply {
                 tvName.text = item.name
-                tvChapter.text = item.durChapterTitle.orEmpty().ifEmpty { item.latestChapterTitle }
+                tvChapter.text = item.durChapterTitle.ifEmpty { item.latestChapterTitle }
                 ivCover.load(item, false)
 
                 // Calculate reading progress
@@ -50,7 +50,7 @@ class BooksAdapterWeChat(context: Context, private val callBack: CallBack) :
                         "name" -> wechatBinding.tvName.text = item.name
                         "cover" -> wechatBinding.ivCover.load(item, false)
                         "refresh" -> {
-                            wechatBinding.tvChapter.text = item.durChapterTitle.orEmpty().ifEmpty { item.latestChapterTitle }
+                            wechatBinding.tvChapter.text = item.durChapterTitle.ifEmpty { item.latestChapterTitle }
                             val progress = calculateProgress(item)
                             wechatBinding.progressBar.progress = progress
                             wechatBinding.tvProgress.text = "${progress}%"
