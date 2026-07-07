@@ -46,7 +46,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        book = intent.getParcelableExtra(EXTRA_BOOK) as Book
+        book = intent.getParcelableExtra<Book>(EXTRA_BOOK)!!
         initView()
     }
 
@@ -191,3 +191,4 @@ class ImmersiveReadActivity : AppCompatActivity() {
         onBackPressedDispatcher.onBackPressed(); return true
     }
 }
+

@@ -1,4 +1,4 @@
-package io.legado.app.ui.ai
+﻿package io.legado.app.ui.ai
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -39,7 +39,7 @@ object DeepSeekClient {
     suspend fun chat(messages: List<ChatMessage>): Result<String> = withContext(Dispatchers.IO) {
         try {
             if (currentConfig.apiKey.isBlank()) {
-                return@withContext Result.failure(Exception("API Key 鏈缃紝璇峰湪璁剧疆涓緭鍏?DeepSeek API Key"))
+                return@withContext Result.failure(Exception("API Key not configured. Please set DeepSeek API Key in settings."))
             }
 
             val jsonBody = JSONObject().apply {
@@ -83,7 +83,7 @@ object DeepSeekClient {
                 return@withContext Result.success(content)
             }
 
-            Result.failure(Exception("API 杩斿洖鏍煎紡寮傚父"))
+            Result.failure(Exception("API 鏉╂柨娲栭弽鐓庣础瀵倸鐖?))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -92,22 +92,22 @@ object DeepSeekClient {
     data class ChatMessage(val role: String, val content: String)
 
     // Preset prompts
-    object Prompts {
+        object Prompts {
         fun summarize(text: String) = listOf(
-            ChatMessage("system", "浣犳槸涓€涓笓涓氱殑闃呰鍔╂墜銆傝鐢ㄧ畝娲佺殑涓枃鎬荤粨浠ヤ笅鏂囨湰鐨勬牳蹇冨唴瀹癸紝鍖呮嫭涓昏鎯呰妭鍜屽叧閿俊鎭€?),
+            ChatMessage("system", "You are a professional reading assistant. Summarize the following text concisely in Chinese, including main plot and key information."),
             ChatMessage("user", text)
         )
 
         fun explain(text: String) = listOf(
-            ChatMessage("system", "浣犳槸涓€涓笓涓氱殑鏂囧鍒嗘瀽鍔╂墜銆傝瑙ｉ噴浠ヤ笅娈佃惤涓毦鎳傜殑璇嶆眹銆佸彞寮忋€佸吀鏁呭拰娣卞眰鍚箟锛屽府鍔╄鑰呮洿濂藉湴鐞嗚В銆?),
+            ChatMessage("system", "You are a professional literary analysis assistant. Explain difficult vocabulary, sentence structures, allusions, and deeper meanings in the following passage."),
             ChatMessage("user", text)
         )
 
         fun qa(text: String, question: String) = listOf(
-            ChatMessage("system", "浣犳槸涓€涓笓涓氱殑闃呰闂瓟鍔╂墜銆傝鍩轰簬鎻愪緵鐨勬枃鏈唴瀹瑰洖绛旇鑰呯殑闂銆傚鏋滄枃鏈腑娌℃湁鐩稿叧淇℃伅锛岃濡傚疄璇存槑銆?),
-            ChatMessage("user", "鏂囨湰鍐呭锛歕n
-闂锛歕")
+            ChatMessage("system", "You are a professional reading Q&A assistant. Answer the reader's question based on the provided text. If the text does not contain relevant information, state this honestly."),
+            ChatMessage("user", "Text content:\n$text\n\nQuestion:\n$question")
         )
     }
 }
+
 
