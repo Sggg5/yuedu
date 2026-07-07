@@ -70,7 +70,7 @@ object DeepSeekClient {
                 val errorMsg = try {
                     JSONObject(responseBody).optString("error", "Unknown error")
                 } catch (e: Exception) {
-                    "HTTP : "
+                    "HTTP ${response.code}: ${response.message}"
                 }
                 return@withContext Result.failure(Exception(errorMsg))
             }
@@ -104,7 +104,9 @@ object DeepSeekClient {
 
         fun qa(text: String, question: String) = listOf(
             ChatMessage("system", "You are a professional reading Q&A assistant. Answer the reader's question based on the provided text. If the text does not contain relevant information, state this honestly."),
-            ChatMessage("user", "Text content:\n\n\nQuestion:\n")
+            ChatMessage("user", "Text content:\n$text\n\nQuestion:\n$question")
         )
     }
 }
+
+
