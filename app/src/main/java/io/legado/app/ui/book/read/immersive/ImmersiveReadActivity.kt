@@ -105,7 +105,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
             }
             if (chapters.isNotEmpty()) {
                 val viewPager = findViewById<ViewPager2>(R.id.view_pager)
-                viewPager.adapter = ImmersiveReadAdapter(this, chapters, fontSize, lineSpacing, isNightMode)
+                viewPager.adapter = ImmersiveReadAdapter(this@ImmersiveReadActivity, chapters, fontSize, lineSpacing, isNightMode)
                 viewPager.offscreenPageLimit = 1
                 viewPager.currentItem = book.durChapterIndex.coerceAtMost(chapters.size - 1)
             }
