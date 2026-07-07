@@ -210,7 +210,4 @@ object PreferKey {
     const val editAutoComplete = "editAutoComplete"
     const val showBoardLine = "showBoardLine"
     const val deepseekApiKey = "deepseekApiKey"
-    const val deepseekTemperature = "deepseekTemperature"
-    const val deepseekApiKey = "deepseekApiKey"
-    const val deepseekTemperature = "deepseekTemperature"
 }
