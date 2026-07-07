@@ -141,7 +141,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
     private fun showAIDialog() {
         val text = (binding.viewPager.adapter as? ImmersiveReadAdapter)
             ?.getPageText(binding.viewPager.currentItem) ?: ""
-        AIDialog.show(supportFragmentManager, text)
+        AIDialog.showDialog(supportFragmentManager, text)
     }
 
     private fun showSettings() {
