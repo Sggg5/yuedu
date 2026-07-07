@@ -30,16 +30,13 @@ object DeepSeekClient {
 
     private var currentConfig = Config()
 
-    fun updateConfig(config: Config) {
-        currentConfig = config
-    }
-
+    fun updateConfig(config: Config) { currentConfig = config }
     fun getCurrentConfig(): Config = currentConfig
 
     suspend fun chat(messages: List<ChatMessage>): Result<String> = withContext(Dispatchers.IO) {
         try {
             if (currentConfig.apiKey.isBlank()) {
-                return@withContext Result.failure(Exception("API Key 未设置，请在设置中输入 DeepSeek API Key"))
+                return@withContext Result.failure(Exception("API Key not set"))
             }
 
             val jsonBody = JSONObject().apply {
@@ -58,7 +55,7 @@ object DeepSeekClient {
 
             val request = Request.Builder()
                 .url(BASE_URL)
-                .addHeader("Authorization", "Bearer \")
+                .addHeader("Authorization", "Bearer " + currentConfig.apiKey)
                 .addHeader("Content-Type", "application/json")
                 .post(jsonBody.toString().toRequestBody(JSON_MEDIA_TYPE))
                 .build()
@@ -70,7 +67,7 @@ object DeepSeekClient {
                 val errorMsg = try {
                     JSONObject(responseBody).optString("error", "Unknown error")
                 } catch (e: Exception) {
-                    "HTTP \: \"
+                    "HTTP " + response.code + ": " + responseBody
                 }
                 return@withContext Result.failure(Exception(errorMsg))
             }
@@ -83,7 +80,7 @@ object DeepSeekClient {
                 return@withContext Result.success(content)
             }
 
-            Result.failure(Exception("API 返回格式异常"))
+            Result.failure(Exception("API response format error"))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -91,22 +88,18 @@ object DeepSeekClient {
 
     data class ChatMessage(val role: String, val content: String)
 
-    // Preset prompts
     object Prompts {
         fun summarize(text: String) = listOf(
-            ChatMessage("system", "你是一个专业的阅读助手。请用简洁的中文总结以下文本的核心内容，包括主要情节和关键信息。"),
+            ChatMessage("system", "Summarize the following text in Chinese concisely."),
             ChatMessage("user", text)
         )
-
         fun explain(text: String) = listOf(
-            ChatMessage("system", "你是一个专业的文学分析助手。请解释以下段落中难懂的词汇、句式、典故和深层含义，帮助读者更好地理解。"),
+            ChatMessage("system", "Explain difficult terms and deeper meaning in Chinese."),
             ChatMessage("user", text)
         )
-
         fun qa(text: String, question: String) = listOf(
-            ChatMessage("system", "你是一个专业的阅读问答助手。请基于提供的文本内容回答读者的问题。如果文本中没有相关信息，请如实说明。"),
-            ChatMessage("user", "文本内容：\n
-问题：\")
+            ChatMessage("system", "Answer questions based on the provided text."),
+            ChatMessage("user", "Text: " + text + "\n\nQuestion: " + question)
         )
     }
 }
