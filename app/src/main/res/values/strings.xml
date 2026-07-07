@@ -1354,7 +1354,6 @@
     <string name="deepseek_api_key_hint">请输入DeepSeek API Key</string>
     <string name="bookshelf_wechat_style">微信读书风格</string>
     <string name="immersive_reading">沉浸式阅读</string>
-    <string name="font_size">字体大小</string>
-    <string name="line_spacing">行间距</string>
     <string name="layout_wechat">微信读书风格</string>
+    <string name="line_spacing">行间距</string>
 </resources>
