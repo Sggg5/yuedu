@@ -58,7 +58,7 @@ object DeepSeekClient {
 
             val request = Request.Builder()
                 .url(BASE_URL)
-                .addHeader("Authorization", "Bearer ${currentConfig.apiKey}")
+                .addHeader("Authorization", "Bearer ")
                 .addHeader("Content-Type", "application/json")
                 .post(jsonBody.toString().toRequestBody(JSON_MEDIA_TYPE))
                 .build()
@@ -70,7 +70,7 @@ object DeepSeekClient {
                 val errorMsg = try {
                     JSONObject(responseBody).optString("error", "Unknown error")
                 } catch (e: Exception) {
-                    "HTTP ${response.code()}: ${response.message()}"
+                    "HTTP : "
                 }
                 return@withContext Result.failure(Exception(errorMsg))
             }
@@ -83,7 +83,7 @@ object DeepSeekClient {
                 return@withContext Result.success(content)
             }
 
-            Result.failure(Exception("API 鏉╂柨娲栭弽鐓庣础瀵倸鐖?))
+            Result.failure(Exception("API returned unexpected format"))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -91,8 +91,7 @@ object DeepSeekClient {
 
     data class ChatMessage(val role: String, val content: String)
 
-    // Preset prompts
-        object Prompts {
+    object Prompts {
         fun summarize(text: String) = listOf(
             ChatMessage("system", "You are a professional reading assistant. Summarize the following text concisely in Chinese, including main plot and key information."),
             ChatMessage("user", text)
@@ -105,9 +104,7 @@ object DeepSeekClient {
 
         fun qa(text: String, question: String) = listOf(
             ChatMessage("system", "You are a professional reading Q&A assistant. Answer the reader's question based on the provided text. If the text does not contain relevant information, state this honestly."),
-            ChatMessage("user", "Text content:\n$text\n\nQuestion:\n$question")
+            ChatMessage("user", "Text content:\n\n\nQuestion:\n")
         )
     }
 }
-
-
