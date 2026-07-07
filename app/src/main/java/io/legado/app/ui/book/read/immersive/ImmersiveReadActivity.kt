@@ -1,4 +1,4 @@
-package io.legado.app.ui.book.read.immersive
+﻿package io.legado.app.ui.book.read.immersive
 
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
@@ -27,7 +27,7 @@ import kotlinx.coroutines.withContext
 
 @SuppressLint("ClickableViewAccessibility")
 class ImmersiveReadActivity : AppCompatActivity() {
-    private val binding by viewBinding(ActivityImmersiveReadBinding::bind)
+    private val binding by viewBinding(ActivityImmersiveReadBinding::inflate, setContentView = true)
     private val viewModel by viewModels<ReadBookViewModel>()
     private lateinit var book: Book
     private var fontSize = 18f
@@ -46,7 +46,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_immersive_read)
+        // setContentView handled by binding
         book = intent.getParcelableExtra(EXTRA_BOOK)!! as Book
         initView()
     }
@@ -94,7 +94,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
         loadContent()
     }
 
-    private fun loadContent() {        lifecycleScope.launch {            val chapters = withContext(Dispatchers.IO) {                val db = io.legado.app.data.appDb                val bookChapters = db.bookChapterDao.getChapterList(book.bookUrl)                bookChapters.mapNotNull { bc ->                    val content = io.legado.app.help.book.BookHelp.getContent(book, bc)                    if (content != null) {                        ImmersiveChapter(bc.title, content)                    } else {                        ImmersiveChapter(bc.title, "(鍐呭鍔犺浇涓紝璇峰厛缂撳瓨绔犺妭...)")                    }                }            }            if (chapters.isNotEmpty()) {                setupViewPager(chapters)            }        }    }
+    private fun loadContent() {        lifecycleScope.launch {            val chapters = withContext(Dispatchers.IO) {                val db = io.legado.app.data.appDb                val bookChapters = db.bookChapterDao.getChapterList(book.bookUrl)                bookChapters.mapNotNull { bc ->                    val content = io.legado.app.help.book.BookHelp.getContent(book, bc)                    if (content != null) {                        ImmersiveChapter(bc.title, content)                    } else {                        ImmersiveChapter(bc.title, "(閸愬懎顔愰崝鐘烘祰娑擃叏绱濈拠宄板帥缂傛挸鐡ㄧ粩鐘哄Ν...)")                    }                }            }            if (chapters.isNotEmpty()) {                setupViewPager(chapters)            }        }    }
     private fun setupViewPager(chapters: List<ImmersiveChapter>) {
         val adapter = ImmersiveReadAdapter(this, chapters, fontSize, lineSpacing, isNightMode)
         binding.viewPager.adapter = adapter
@@ -134,7 +134,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
         binding.rootLayout.setBackgroundColor(
             resources.getColor(if (isNightMode) R.color.read_bg_night else R.color.read_bg, theme)
         )
-        binding.btnNightMode.text = if (isNightMode) "鏃ラ棿" else "澶滈棿"
+        binding.btnNightMode.text = if (isNightMode) "閺冦儵妫? else "婢舵粓妫?
         (binding.viewPager.adapter as? ImmersiveReadAdapter)?.updateNightMode(isNightMode)
     }
 
@@ -163,7 +163,7 @@ class ImmersiveReadActivity : AppCompatActivity() {
                 if (key.isNotBlank()) {
                     DeepSeekClient.updateConfig(DeepSeekClient.getCurrentConfig().copy(apiKey = key))
                 }
-                android.widget.Toast.makeText(this, "API Key 宸蹭繚瀛?, android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(this, "API Key 瀹歌弓绻氱€?, android.widget.Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
@@ -174,4 +174,6 @@ class ImmersiveReadActivity : AppCompatActivity() {
         onBackPressedDispatcher.onBackPressed(); return true
     }
 }
+
+
 
