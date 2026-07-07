@@ -22,7 +22,7 @@ class AIDialog : DialogFragment() {
     companion object {
         private const val ARG_TEXT = "text"
 
-        fun show(manager: androidx.fragment.app.FragmentManager, text: String) {
+        fun showDialog(manager: androidx.fragment.app.FragmentManager, text: String) {
             val dialog = AIDialog().apply {
                 arguments = Bundle().apply {
                     putString(ARG_TEXT, text)
